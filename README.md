@@ -16,3 +16,6 @@ Run jar with `java -jar vk-post-inspector-jar` or .bat file. `conf.properties` f
 
 # Development Environment
 Project is built with gradle and uses official VK Java SDK
+
+# Others
+A related utility [vk-post-searcher](https://github.com/iNomaD/VKpostSearcher), otherwise, scans a list of group for posts and comments with a regex or posted by a specific user.
