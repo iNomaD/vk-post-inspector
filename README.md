@@ -4,7 +4,7 @@ Utility allows to get a list of users who liked, reposted or commented a specifi
 #Getting Started
 Release is situated in `dist` folder. Java 8 is required!
 
-Run jar with `java -jar vk-post-inspector-jar` or .bat file. `conf.properties` file should be edited to set parameters of the parser shown below.
+Run jar with `java -jar vk-post-inspector-jar` or `start.bat` file. Initially, `conf.properties` file should be edited to set parameters of the parser shown below.
 
 1. `ownerId` (required) - id of the group that contains the post
 2. `itemId` (required) - id the post
