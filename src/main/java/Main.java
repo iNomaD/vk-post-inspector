@@ -15,8 +15,20 @@ import java.util.stream.Collectors;
  */
 public class Main {
     public static void main(String[] args){
+        boolean getToken = false;
+        for(String argument : args){
+            if(argument.equals("-token")){
+                getToken = true;
+            }
+        }
+
         if(!Config.loadProperties()){
             System.out.println("Can't load config from "+Config.CONF_FILE_NAME+" !");
+            return;
+        }
+
+        if(getToken){
+            Auth.getToken();
             return;
         }
 
@@ -63,7 +75,7 @@ public class Main {
                 System.out.println(user.format());
             }
 
-            System.out.println("Commentor before filter: "+usersCommentedIds.size());
+            System.out.println("Commentors before filter: "+usersCommentedIds.size());
             System.out.println("Commentors after filter: "+usersCommented.size());
             for(SimpleUser user : usersCommented){
                 System.out.println(user.format() + " " + userComments.get(user.getId()));
