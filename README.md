@@ -11,7 +11,7 @@ Run jar with `java -jar vk-post-inspector-jar` or .bat file. `conf.properties` f
 3. `isWoman` - boolean value for gender filter
 3. `cityId` - integer value for city, e.g. 1 for Moscow and 2 for SPB
 4. `minAge` and `maxAge` - integer values for age
-5. `appId`, `accessToken`, `userId` - values requred only to get access to the post in the closed group, user should firstly install app with `appId` and get `accessToken` manually
+5. `appId`, `accessToken`, `userId` - values requred only to get access to the post in the closed group, you can use default app with id `5810259` and simply run jar with `-token` parameter to get `accessToken` and `userId`
 6. `outputToFile` - boolean and `outputName` - String value to specify where the result will be placed
 
 # Development Environment
