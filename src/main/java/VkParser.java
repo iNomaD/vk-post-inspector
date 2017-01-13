@@ -4,12 +4,17 @@ import com.vk.api.sdk.exceptions.ApiException;
 import com.vk.api.sdk.exceptions.ApiTooManyException;
 import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.objects.likes.responses.GetListResponse;
+import com.vk.api.sdk.objects.users.UserFull;
 import com.vk.api.sdk.objects.users.UserXtrCounters;
+import com.vk.api.sdk.objects.users.responses.SearchResponse;
 import com.vk.api.sdk.objects.wall.WallComment;
 import com.vk.api.sdk.objects.wall.responses.GetCommentsResponse;
 import com.vk.api.sdk.queries.likes.LikesGetListFilter;
 import com.vk.api.sdk.queries.likes.LikesType;
 import com.vk.api.sdk.queries.users.UserField;
+import com.vk.api.sdk.queries.users.UsersSearchQuery;
+import com.vk.api.sdk.queries.users.UsersSearchSex;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -143,4 +148,81 @@ public class VkParser {
         }
         return result;
     }
+
+    public Pair<List<UserFull>, Integer> parseUsersByParameters(Integer groupId, Integer cityId, Integer minAge, Integer maxAge, Boolean isWoman, int count, Integer month, Integer day) throws ApiException, ClientException, InterruptedException{
+        UsersSearchQuery query = vk.users().search(userActor).groupId(groupId).count(count);
+        if(cityId != null){
+            query = query.city(cityId);
+        }
+        if(minAge != null){
+            query = query.ageFrom(minAge);
+        }
+        if(maxAge != null){
+            query = query.ageTo(maxAge);
+        }
+        if(isWoman != null){
+            query = query.sex(isWoman? UsersSearchSex.FEMALE : UsersSearchSex.MALE);
+        }
+        if(month != null){
+            query = query.birthMonth(month);
+        }
+        if(day != null){
+            query = query.birthDay(day);
+        }
+        while (true) {
+            try {
+                SearchResponse searchResponse = query.execute();
+                Thread.sleep(TIMEOUT);
+                return new Pair<List<UserFull>, Integer>() {
+                    @Override
+                    public List<UserFull> getLeft() {
+                        return searchResponse.getItems();
+                    }
+
+                    @Override
+                    public Integer getRight() {
+                        return searchResponse.getCount();
+                    }
+
+                    @Override
+                    public Integer setValue(Integer value) {
+                        return searchResponse.getCount();
+                    }
+                };
+            } catch (ApiTooManyException e) {
+                Thread.sleep(TIMEOUT * 10);
+                System.out.println("Retrying parseUsersByParameters");
+            }
+        }
+    }
+
+    /*private List<UserFull> searchUsersByGroup(String firstName, String lastName, Integer city, Integer minAge, Integer maxAge) throws ApiException, ClientException, InterruptedException{
+        UsersSearchQuery query = vk.users().search(userActor).q(firstName+" "+lastName).groupId(-Config.ownerId).city(city).count(10);
+        if(minAge != null){
+            query = query.ageFrom(minAge);
+        }
+        if(maxAge != null){
+            query = query.ageTo(maxAge);
+        }
+        while (true) {
+            try {
+                SearchResponse searchResponse = query.execute();
+                Thread.sleep(TIMEOUT);
+                return searchResponse.getItems();
+            } catch (ApiTooManyException e) {
+                Thread.sleep(TIMEOUT * 10);
+                System.out.println("Retrying get age by search");
+            }
+        }
+    }
+
+    public boolean checkUserByGroup(Integer id, String firstName, String lastName, Integer city, Integer minAge, Integer maxAge) throws ApiException, ClientException, InterruptedException{
+        List<UserFull> users = searchUsersByGroup(firstName, lastName, city, minAge, maxAge);
+        for(UserFull u : users){
+            if(u.getId().equals(id)){
+                return true;
+            }
+        }
+        return false;
+    }*/
 }

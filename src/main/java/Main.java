@@ -40,18 +40,32 @@ public class Main {
         VkParser vkParser = new VkParser(vk, userActor);
         Filter filter = new Filter(vkParser, Config.isWoman, Config.cityId, Config.minAge, Config.maxAge);
         try {
+            /*SimpleUser muser = new SimpleUser();
+            muser.setFirstName("Алёна");
+            muser.setLastName("Минаева");
+            muser.setId(9840087);
+            muser.setCityId(2);
+            System.out.println(filter.filterAgeAdvanced(muser));*/
+
+            if(Config.advancedAge){
+                filter.findAppropriateUsers();
+            }
+
             List<Integer> usersLikedIds = vkParser.getUsersLiked(Config.ownerId, Config.itemId);
             usersLikedIds = usersLikedIds.stream().filter(p -> p > 0).collect(Collectors.toList());
+            System.out.println("Filtering users...");
             List<SimpleUser> usersLiked = filter.filterList(usersLikedIds);
 
             List<Integer> usersRepostedIds = vkParser.getUsersReposted(Config.ownerId, Config.itemId);
             usersRepostedIds = usersRepostedIds.stream().filter(p -> p > 0).collect(Collectors.toList());
+            System.out.println("Filtering users...");
             List<SimpleUser> usersReposted = filter.filterList(usersRepostedIds);
 
 
             Map<Integer, String> userComments = vkParser.getUsersCommented(Config.ownerId, Config.itemId);
             Set<Integer> usersCommentedIds = userComments.keySet();
             usersCommentedIds = usersCommentedIds.stream().filter(p -> p > 0).collect(Collectors.toSet());
+            System.out.println("Filtering users...");
             List<SimpleUser> usersCommented = filter.filterList(usersCommentedIds);
 
             String outname = Config.outputName;

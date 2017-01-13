@@ -15,6 +15,7 @@ public class Config {
     public static Integer cityId = null; // STRONG PARAMETER Moscow (1), Saint-Petersburg (2), Kirov(66)
     public static Integer minAge = null; // WEAK PARAMETER
     public static Integer maxAge = null; // WEAK PARAMETER
+    public static Boolean advancedAge = true;
 
     // user parameters
     public static Integer appId = 0;
@@ -40,6 +41,7 @@ public class Config {
             cityId = parseInteger(prop, "cityId", cityId);
             minAge = parseInteger(prop, "minAge", minAge);
             maxAge = parseInteger(prop, "maxAge", maxAge);
+            isWoman = parseBoolean(prop, "advancedAge", advancedAge);
 
             appId = parseInteger(prop, "appId", appId);
             accessToken = parseString(prop, "accessToken", accessToken);
