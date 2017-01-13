@@ -39,19 +39,22 @@ public class VkParser {
         this.userActor = user;
     }
 
-    public List<Integer> getUsersLiked(int ownerId, int itemId) throws ApiException, ClientException, InterruptedException{
+    public List<Integer> getUsersLiked(int ownerId, int itemId, boolean forcedAuth) throws ApiException, ClientException, InterruptedException{
         int offset = 0;
         List<Integer> result = new LinkedList<Integer>();
-        GetListResponse usersLiked = vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).execute();
+
+        GetListResponse usersLiked = vk.likes().getList(forcedAuth ? userActor : new UserActor(0, ""), LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).execute();
         result.addAll(usersLiked.getItems());
         Integer count = usersLiked.getCount();
 
         while(result.size() < count && offset < count){
             offset += STEP;
             try {
-                usersLiked = vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).execute();
+                usersLiked = vk.likes().getList(forcedAuth ? userActor : new UserActor(0, ""), LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).execute();
                 result.addAll(usersLiked.getItems());
-                Thread.sleep(TIMEOUT/10);
+                if(forcedAuth){
+                    Thread.sleep(TIMEOUT/10);
+                }
                 System.out.println("l_"+result.size()+"/"+count);
             }
             catch (ApiTooManyException e){
@@ -63,19 +66,21 @@ public class VkParser {
         return result;
     }
 
-    public List<Integer> getUsersReposted(int ownerId, int itemId) throws ApiException, ClientException, InterruptedException{
+    public List<Integer> getUsersReposted(int ownerId, int itemId, boolean forcedAuth) throws ApiException, ClientException, InterruptedException{
         int offset = 0;
         List<Integer> result = new LinkedList<Integer>();
-        GetListResponse usersReposted = vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).filter(LikesGetListFilter.COPIES).execute();
+        GetListResponse usersReposted = vk.likes().getList(forcedAuth ? userActor : new UserActor(0, ""), LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).filter(LikesGetListFilter.COPIES).execute();
         result.addAll(usersReposted.getItems());
         Integer count = usersReposted.getCount();
 
         while(result.size() < count && offset < count){
             offset += STEP;
             try {
-                usersReposted = vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).filter(LikesGetListFilter.COPIES).execute();
+                usersReposted = vk.likes().getList(forcedAuth ? userActor : new UserActor(0, ""), LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).filter(LikesGetListFilter.COPIES).execute();
                 result.addAll(usersReposted.getItems());
-                Thread.sleep(TIMEOUT/10);
+                if(forcedAuth){
+                    Thread.sleep(TIMEOUT/10);
+                }
                 System.out.println("r_"+result.size()+"/"+count);
             }
             catch (ApiTooManyException e){
@@ -88,19 +93,21 @@ public class VkParser {
         return result;
     }
 
-    public Map<Integer, String> getUsersCommented(int ownerId, int itemId) throws ApiException, ClientException, InterruptedException{
+    public Map<Integer, String> getUsersCommented(int ownerId, int itemId, boolean forcedAuth) throws ApiException, ClientException, InterruptedException{
         int offset = 0;
         List<WallComment> comments = new LinkedList<>();
-        GetCommentsResponse commentsResponse = vk.wall().getComments(userActor, itemId).ownerId(ownerId).offset(offset).count(COMMENTS).execute();
+        GetCommentsResponse commentsResponse = vk.wall().getComments(forcedAuth ? userActor : new UserActor(0, ""), itemId).ownerId(ownerId).offset(offset).count(COMMENTS).execute();
         comments.addAll(commentsResponse.getItems());
         Integer count = commentsResponse.getCount();
 
         while(comments.size() < count && offset < count){
             offset += COMMENTS;
             try {
-                commentsResponse = vk.wall().getComments(userActor, itemId).ownerId(ownerId).offset(offset).count(COMMENTS).execute();
+                commentsResponse = vk.wall().getComments(forcedAuth ? userActor : new UserActor(0, ""), itemId).ownerId(ownerId).offset(offset).count(COMMENTS).execute();
                 comments.addAll(commentsResponse.getItems());
-                Thread.sleep(TIMEOUT/10);
+                if(forcedAuth){
+                    Thread.sleep(TIMEOUT/10);
+                }
                 System.out.println("c_"+comments.size()+"/"+count);
             }
             catch (ApiTooManyException e){
@@ -121,7 +128,7 @@ public class VkParser {
         return userComments;
     }
 
-    public List<UserXtrCounters> getUserProfiles(Collection<Integer> ids) throws ApiException, ClientException, InterruptedException{
+    public List<UserXtrCounters> getUserProfiles(Collection<Integer> ids, boolean forcedAuth) throws ApiException, ClientException, InterruptedException{
         List<UserXtrCounters> result = new LinkedList<>();
         List<String> userIds = new LinkedList<>();
         int counter = 0;
@@ -131,11 +138,13 @@ public class VkParser {
             if(counter % USERS == 0 || counter == ids.size()){
                 while(true) {
                     try {
-                        List<UserXtrCounters> response = vk.users().get(userActor).userIds(userIds).fields(UserField.SEX, UserField.BDATE, UserField.CITY, UserField.RELATION, UserField.DOMAIN).execute();
+                        List<UserXtrCounters> response = vk.users().get(forcedAuth ? userActor : new UserActor(0, "")).userIds(userIds).fields(UserField.SEX, UserField.BDATE, UserField.CITY, UserField.RELATION, UserField.DOMAIN).execute();
                         result.addAll(response);
                         userIds.clear();
                         System.out.println("u_"+counter+"/"+ids.size());
-                        Thread.sleep(TIMEOUT/10);
+                        if(forcedAuth){
+                            Thread.sleep(TIMEOUT/10);
+                        }
                         break;
                     }
                     catch (ApiTooManyException e){
@@ -171,7 +180,7 @@ public class VkParser {
         while (true) {
             try {
                 SearchResponse searchResponse = query.execute();
-                Thread.sleep(TIMEOUT);
+                Thread.sleep(TIMEOUT*2);
                 return new Pair<List<UserFull>, Integer>() {
                     @Override
                     public List<UserFull> getLeft() {

@@ -20,6 +20,7 @@ public class Config {
     public static Integer appId = 0;
     public static String accessToken = "";
     public static Integer userId = 0;
+    public static Boolean forcedAuth = false;
 
     // outputs
     public static Boolean outputToFile = false;

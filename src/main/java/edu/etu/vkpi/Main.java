@@ -43,18 +43,18 @@ public class Main {
                 filter.findAppropriateUsers();
             }
 
-            List<Integer> usersLikedIds = vkParser.getUsersLiked(Config.ownerId, Config.itemId);
+            List<Integer> usersLikedIds = vkParser.getUsersLiked(Config.ownerId, Config.itemId, Config.forcedAuth);
             usersLikedIds = usersLikedIds.stream().filter(p -> p > 0).collect(Collectors.toList());
             System.out.println("Filtering users...");
             List<SimpleUser> usersLiked = filter.filterList(usersLikedIds);
 
-            List<Integer> usersRepostedIds = vkParser.getUsersReposted(Config.ownerId, Config.itemId);
+            List<Integer> usersRepostedIds = vkParser.getUsersReposted(Config.ownerId, Config.itemId, Config.forcedAuth);
             usersRepostedIds = usersRepostedIds.stream().filter(p -> p > 0).collect(Collectors.toList());
             System.out.println("Filtering users...");
             List<SimpleUser> usersReposted = filter.filterList(usersRepostedIds);
 
 
-            Map<Integer, String> userComments = vkParser.getUsersCommented(Config.ownerId, Config.itemId);
+            Map<Integer, String> userComments = vkParser.getUsersCommented(Config.ownerId, Config.itemId, Config.forcedAuth);
             Set<Integer> usersCommentedIds = userComments.keySet();
             usersCommentedIds = usersCommentedIds.stream().filter(p -> p > 0).collect(Collectors.toSet());
             System.out.println("Filtering users...");
