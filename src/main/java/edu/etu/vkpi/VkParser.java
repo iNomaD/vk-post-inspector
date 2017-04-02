@@ -119,11 +119,15 @@ public class VkParser {
 
         Map<Integer, String> userComments = new HashMap<>();
         for(WallComment wc : comments){
+            String link = "https://vk.com/wall"+Config.ownerId+"_"+Config.itemId+"?reply="+wc.getId();
+            String comment = "[" + link + "]='"+wc.getText()+"'";
             if(userComments.containsKey(wc.getFromId())){
                 String oldValue = userComments.get(wc.getFromId());
-                userComments.put(wc.getFromId(), oldValue.concat(";| ").concat(wc.getText()));
+                userComments.put(wc.getFromId(), oldValue.concat(";| ").concat(comment));
             }
-            userComments.put(wc.getFromId(), wc.getText());
+            else{
+                userComments.put(wc.getFromId(), comment);
+            }
         }
         return userComments;
     }
