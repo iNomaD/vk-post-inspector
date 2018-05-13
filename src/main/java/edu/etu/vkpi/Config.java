@@ -20,7 +20,7 @@ public class Config {
     public static Integer appId = 0;
     public static String accessToken = "";
     public static Integer userId = 0;
-    public static Boolean forcedAuth = false;
+    public static Integer timeout = 333;
 
     // outputs
     public static Boolean outputToFile = false;
@@ -46,6 +46,7 @@ public class Config {
             appId = parseInteger(prop, "appId", appId);
             accessToken = parseString(prop, "accessToken", accessToken);
             userId = parseInteger(prop, "userId", userId);
+            timeout = parseInteger(prop, "timeout", timeout);
 
             outputToFile = parseBoolean(prop, "outputToFile", outputToFile);
             outputName = parseString(prop, "outputName", outputName);

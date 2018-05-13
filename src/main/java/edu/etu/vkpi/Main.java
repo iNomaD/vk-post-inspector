@@ -31,7 +31,7 @@ public class Main {
             return;
         }
 
-        TransportClient transportClient = HttpTransportClient.getInstance();
+        TransportClient transportClient = new HttpTransportClient();
         VkApiClient vk = new VkApiClient(transportClient);
         UserActor userActor = Auth.authorize(vk, Config.userId, Config.accessToken);
         System.out.println(userActor);
@@ -43,18 +43,18 @@ public class Main {
                 filter.findAppropriateUsers();
             }
 
-            List<Integer> usersLikedIds = vkParser.getUsersLiked(Config.ownerId, Config.itemId, Config.forcedAuth);
+            List<Integer> usersLikedIds = vkParser.getUsersLiked(Config.ownerId, Config.itemId);
             usersLikedIds = usersLikedIds.stream().filter(p -> p > 0).collect(Collectors.toList());
             System.out.println("Filtering users...");
             List<SimpleUser> usersLiked = filter.filterList(usersLikedIds);
 
-            List<Integer> usersRepostedIds = vkParser.getUsersReposted(Config.ownerId, Config.itemId, Config.forcedAuth);
+            List<Integer> usersRepostedIds = vkParser.getUsersReposted(Config.ownerId, Config.itemId);
             usersRepostedIds = usersRepostedIds.stream().filter(p -> p > 0).collect(Collectors.toList());
             System.out.println("Filtering users...");
             List<SimpleUser> usersReposted = filter.filterList(usersRepostedIds);
 
 
-            Map<Integer, String> userComments = vkParser.getUsersCommented(Config.ownerId, Config.itemId, Config.forcedAuth);
+            Map<Integer, String> userComments = vkParser.getUsersCommented(Config.ownerId, Config.itemId);
             Set<Integer> usersCommentedIds = userComments.keySet();
             usersCommentedIds = usersCommentedIds.stream().filter(p -> p > 0).collect(Collectors.toSet());
             System.out.println("Filtering users...");

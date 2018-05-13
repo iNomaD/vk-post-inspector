@@ -88,7 +88,7 @@ public class Filter {
     public List<SimpleUser> filterList(Collection<Integer> ids){
         List<SimpleUser> result = new LinkedList<>();
         try {
-            List<UserXtrCounters> userXtrCounterses = vkParser.getUserProfiles(ids, Config.forcedAuth);
+            List<UserXtrCounters> userXtrCounterses = vkParser.getUserProfiles(ids);
             for(UserXtrCounters item : userXtrCounterses){
                 SimpleUser user = new SimpleUser();
                 user.setId(item.getId());
