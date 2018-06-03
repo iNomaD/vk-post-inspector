@@ -6,10 +6,16 @@ import com.vk.api.sdk.exceptions.ApiException;
 import com.vk.api.sdk.exceptions.ApiTooManyException;
 import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.objects.likes.responses.GetListResponse;
+import com.vk.api.sdk.objects.polls.Answer;
+import com.vk.api.sdk.objects.polls.Poll;
+import com.vk.api.sdk.objects.polls.Voters;
 import com.vk.api.sdk.objects.users.UserFull;
 import com.vk.api.sdk.objects.users.UserXtrCounters;
 import com.vk.api.sdk.objects.users.responses.SearchResponse;
 import com.vk.api.sdk.objects.wall.WallComment;
+import com.vk.api.sdk.objects.wall.WallPostFull;
+import com.vk.api.sdk.objects.wall.WallpostAttachment;
+import com.vk.api.sdk.objects.wall.WallpostAttachmentType;
 import com.vk.api.sdk.objects.wall.responses.GetCommentsResponse;
 import com.vk.api.sdk.queries.likes.LikesGetListFilter;
 import com.vk.api.sdk.queries.likes.LikesType;
@@ -19,11 +25,12 @@ import com.vk.api.sdk.queries.users.UsersSearchSex;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class VkParser {
-    private static final int STEP = 1000;
-    private static final int USERS = 1000;
-    private static final int COMMENTS = 100;
+    private static final int LIKES_STEP = 1000;
+    private static final int COMMENTS_STEP = 100;
+    private static final int USERS_GET_LIMIT = 1000;
 
     private VkApiClient vk;
     private UserActor userActor;
@@ -40,10 +47,10 @@ public class VkParser {
 
         while(result.size() < count && offset < count){
             try {
-                GetListResponse usersLiked = new QueryWithDelay<>(vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP), Config.timeout).execute();
+                GetListResponse usersLiked = new QueryWithDelay<>(vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(LIKES_STEP), Config.timeout).execute();
                 count = usersLiked.getCount();
                 result.addAll(usersLiked.getItems());
-                offset += STEP;
+                offset += LIKES_STEP;
                 System.out.println("likes_"+result.size()+"/"+count);
             }
             catch (ApiTooManyException e){
@@ -61,10 +68,10 @@ public class VkParser {
 
         while(result.size() < count && offset < count){
             try {
-                GetListResponse usersReposted = new QueryWithDelay<>(vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(STEP).filter(LikesGetListFilter.COPIES), Config.timeout).execute();
+                GetListResponse usersReposted = new QueryWithDelay<>(vk.likes().getList(userActor, LikesType.POST).ownerId(ownerId).itemId(itemId).offset(offset).count(LIKES_STEP).filter(LikesGetListFilter.COPIES), Config.timeout).execute();
                 count = usersReposted.getCount();
                 result.addAll(usersReposted.getItems());
-                offset += STEP;
+                offset += LIKES_STEP;
                 System.out.println("reposts_"+result.size()+"/"+count);
             }
             catch (ApiTooManyException e){
@@ -83,10 +90,10 @@ public class VkParser {
 
         while(comments.size() < count && offset < count){
             try {
-                GetCommentsResponse commentsResponse = new QueryWithDelay<>(vk.wall().getComments(userActor, itemId).ownerId(ownerId).offset(offset).count(COMMENTS), Config.timeout).execute();
+                GetCommentsResponse commentsResponse = new QueryWithDelay<>(vk.wall().getComments(userActor, itemId).ownerId(ownerId).offset(offset).count(COMMENTS_STEP), Config.timeout).execute();
                 count = commentsResponse.getCount();
                 comments.addAll(commentsResponse.getItems());
-                offset += COMMENTS;
+                offset += COMMENTS_STEP;
                 System.out.println("c_"+comments.size()+"/"+count);
             }
             catch (ApiTooManyException e){
@@ -110,6 +117,47 @@ public class VkParser {
         return userComments;
     }
 
+    public Map<Answer, List<Integer>> getUsersInPoll(int ownerId, int itemId) throws ApiException, ClientException, InterruptedException{
+        Map<Answer, List<Integer>> map = new HashMap<>();;
+        List<WallPostFull> list = new QueryWithDelay<>(vk.wall().getById(userActor, ownerId+"_"+itemId), Config.timeout).execute();
+        List<WallpostAttachment> wallpostAttachments = !(list == null || list.isEmpty()) ? list.get(0).getAttachments() : new ArrayList<>();
+        for(WallpostAttachment attachment : wallpostAttachments){
+            if(attachment.getType() == WallpostAttachmentType.POLL){
+                Poll poll = attachment.getPoll();
+                List<Answer> answers = poll.getAnswers();
+                List<Integer> answerIds = answers.stream().map(Answer::getId).collect(Collectors.toList());
+                for(Answer answer : answers){
+                    map.put(answer, new ArrayList<>());
+                }
+
+                int count = Integer.valueOf(poll.getVotes());
+                int offset = 0;
+                int votersSize = 0;
+                while(votersSize < count){
+                    try {
+                        List<Voters> voters_list = new QueryWithDelay<>(vk.polls().getVoters(userActor, poll.getId(), answerIds).ownerId(ownerId).offset(offset).count(LIKES_STEP), Config.timeout).execute();
+                        for(Voters voters : voters_list){
+                            for(Map.Entry<Answer, List<Integer>> entry : map.entrySet()){
+                                if(entry.getKey().getId().equals(voters.getAnswerId())){
+                                    entry.getValue().addAll(voters.getUsers().getItems());
+                                    votersSize += voters.getUsers().getItems().size();
+                                }
+                            }
+                        }
+                        offset += LIKES_STEP;
+                        System.out.println("v_"+votersSize+"/"+count);
+                    }
+                    catch (ApiTooManyException e){
+                        Thread.sleep(Config.timeout);
+                        System.out.println("Retrying get voters ("+votersSize+"/"+count+")");
+                    }
+                }
+                break;
+            }
+        }
+        return map;
+    }
+
     public List<UserXtrCounters> getUserProfiles(Collection<Integer> ids) throws ApiException, ClientException, InterruptedException{
         List<UserXtrCounters> result = new LinkedList<>();
         List<String> userIds = new LinkedList<>();
@@ -117,7 +165,7 @@ public class VkParser {
         for(Integer item : ids){
             userIds.add(item.toString());
             ++counter;
-            if(counter % USERS == 0 || counter == ids.size()){
+            if(counter % USERS_GET_LIMIT == 0 || counter == ids.size()){
                 while(true) {
                     try {
                         List<UserXtrCounters> response = new QueryWithDelay<>(vk.users().get(userActor).userIds(userIds).fields(UserField.SEX, UserField.BDATE, UserField.CITY, UserField.RELATION, UserField.DOMAIN), Config.timeout).execute();

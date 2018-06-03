@@ -74,7 +74,7 @@ public class Filter {
         return true;
     }
 
-    public boolean filterAgeAdvanced(SimpleUser user){
+    private boolean filterAgeAdvanced(SimpleUser user){
         try {
             return appropriateUsers.contains(user.getId());
             //return vkParser.checkUserByGroup(user.getId(), user.getFirstName(), user.getLastName(), user.getCityId(), minAge, maxAge);
@@ -85,7 +85,7 @@ public class Filter {
         return true;
     }
 
-    public List<SimpleUser> filterList(Collection<Integer> ids){
+    public List<SimpleUser> filterCollection(Collection<Integer> ids){
         List<SimpleUser> result = new LinkedList<>();
         try {
             List<UserXtrCounters> userXtrCounterses = vkParser.getUserProfiles(ids);
@@ -101,12 +101,8 @@ public class Filter {
                 user.setDomain(item.getDomain());
                 user.setSex(item.getSex() == null ? null : item.getSex().getValue());
                 user.calculateAge();
-                if(filterSex(user) && filterCity(user) && filterAge(user)){
-                    if(Config.advancedAge && user.getAge() == null){
-                        if(!filterAgeAdvanced(user)) {
-                            continue;
-                        }
-                    }
+
+                if(filterSimpleUser(user)){
                     result.add(user);
                 }
             }
@@ -115,5 +111,12 @@ public class Filter {
             e.printStackTrace();
         }
         return result;
+    }
+
+    private boolean filterSimpleUser(SimpleUser user){
+        if(filterSex(user) && filterCity(user) && filterAge(user)) {
+            return !Config.advancedAge || user.getAge() != null || filterAgeAdvanced(user);
+        }
+        return false;
     }
 }
